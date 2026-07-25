@@ -87,4 +87,61 @@ class BookingController extends Controller
             return response()->json(['message' => 'Gagal membuat booking: ' . $e->getMessage()], 500);
         }
     }
+
+    /**
+     * GET /api/v1/bookings
+     * Admin: list all bookings.
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $bookings = Booking::with('customer')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'data' => $bookings
+        ]);
+    }
+
+    /**
+     * PUT/PATCH /api/v1/bookings/{id}
+     * Admin: update booking details or status.
+     */
+    public function update(Request $request, $id): JsonResponse
+    {
+        $booking = Booking::findOrFail($id);
+
+        $data = $request->validate([
+            'status'                => ['sometimes', 'string', 'in:pending,confirmed,paid,completed,cancelled,rescheduled,expired'],
+            'payment_status'        => ['sometimes', 'string'],
+            'date'                  => ['sometimes', 'date'],
+            'end_date'              => ['sometimes', 'date', 'nullable'],
+            'duration'              => ['sometimes', 'string'],
+            'notes'                 => ['sometimes', 'string', 'nullable'],
+            'original_booking_date' => ['sometimes', 'date', 'nullable'],
+            'reschedule_notes'      => ['sometimes', 'string', 'nullable'],
+        ]);
+
+        $booking->update($data);
+
+        return response()->json([
+            'message' => 'Booking berhasil diperbarui.',
+            'data'    => $booking->load('customer')
+        ]);
+    }
+
+    /**
+     * DELETE /api/v1/bookings/{id}
+     * Admin: delete a booking.
+     */
+    public function destroy($id): JsonResponse
+    {
+        $booking = Booking::findOrFail($id);
+        $booking->delete();
+
+        return response()->json([
+            'message' => 'Booking berhasil dihapus.'
+        ]);
+    }
 }
+

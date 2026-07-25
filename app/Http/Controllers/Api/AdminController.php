@@ -47,4 +47,27 @@ class AdminController extends Controller
             ],
         ]);
     }
+
+    /**
+     * GET /api/v1/admin/users
+     * Super Admin/Admin: list all users.
+     */
+    public function users(): JsonResponse
+    {
+        $users = User::orderBy('created_at', 'desc')->get();
+
+        $mapped = $users->map(function ($u) {
+            return [
+                'id'         => (string) $u->id,
+                'full_name'  => $u->name,
+                'email'      => $u->email,
+                'role'       => $u->role,
+                'created_at' => $u->created_at?->toIso8601String(),
+                'updated_at' => $u->updated_at?->toIso8601String(),
+            ];
+        });
+
+        return response()->json(['data' => $mapped]);
+    }
 }
+

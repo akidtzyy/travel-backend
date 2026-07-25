@@ -57,12 +57,33 @@ Route::prefix('v1')->group(function () {
     });
 
     // -----------------------------------------------------------------------
-    // D. Protected: Admin + Super Admin (Catalog Management)
+    // D. Protected: Admin + Super Admin (Catalog & Booking Management)
     // -----------------------------------------------------------------------
     Route::middleware(['auth:sanctum', 'role:admin,super_admin'])->group(function () {
-        Route::post('tour-packages', [TourPackageController::class, 'store']);
-        Route::post('car-rentals',   [CarRentalController::class,   'store']);
-        Route::get('customers/search', [CustomerController::class,  'search']);
+        // Bookings Management
+        Route::get('bookings',               [BookingController::class, 'index']);
+        Route::put('bookings/{booking}',     [BookingController::class, 'update']);
+        Route::delete('bookings/{booking}',  [BookingController::class, 'destroy']);
+
+        // Customers Management
+        Route::get('customers',              [CustomerController::class, 'index']);
+        Route::post('customers',             [CustomerController::class, 'store']);
+        Route::put('customers/{customer}',   [CustomerController::class, 'update']);
+        Route::patch('customers/{customer}', [CustomerController::class, 'update']);
+        Route::delete('customers/{customer}',[CustomerController::class, 'destroy']);
+        Route::get('customers/search',       [CustomerController::class, 'search']);
+
+        // Catalog Management
+        Route::post('tour-packages',         [TourPackageController::class, 'store']);
+        Route::put('tour-packages/{package}',[TourPackageController::class, 'update']);
+        Route::delete('tour-packages/{package}', [TourPackageController::class, 'destroy']);
+
+        Route::post('car-rentals',           [CarRentalController::class, 'store']);
+        Route::put('car-rentals/{car}',      [CarRentalController::class, 'update']);
+        Route::delete('car-rentals/{car}',   [CarRentalController::class, 'destroy']);
+        
+        // User Management
+        Route::get('admin/users',            [AdminController::class, 'users']);
     });
 
     // -----------------------------------------------------------------------
