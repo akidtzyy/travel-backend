@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('car_rentals', function (Blueprint $table) {
-            $table->string('duration_capacity')->nullable()->after('capacity');
-            $table->string('category')->nullable()->after('duration_capacity');
-            $table->json('features')->nullable()->after('category'); // Tipe JSON cocok untuk menyimpan format array seperti ["Manual/AT", "AC"]
+            $table->string('duration_desc')->nullable()->after('price');
+            $table->string('category')->nullable()->after('image_url');
+            $table->json('features')->nullable()->after('category');
         });
     }
 
@@ -24,8 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('car_rentals', function (Blueprint $table) {
-            //
-            $table->dropColumn(['duration_capacity', 'category', 'features']);
+            $table->dropColumn(['duration_desc', 'category', 'features']);
         });
     }
 };
