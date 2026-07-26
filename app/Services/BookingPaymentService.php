@@ -185,11 +185,10 @@ class BookingPaymentService
             && ($fraudStatus === null || $fraudStatus === 'accept');
 
         if ($isSettled) {
-            if ($isFinalPayment) {
+            if ($isFinalPayment || $booking->payment_type === 'FULL') {
                 // Full payment or pelunasan settled
                 $booking->update([
                     'payment_status'    => 'paid',
-                    'status'            => 'confirmed',
                     'amount_paid'       => $booking->total_price,
                     'remaining_balance' => 0,
                     'paid_at'           => now(),
@@ -238,6 +237,15 @@ class BookingPaymentService
             throw new \RuntimeException("Midtrans status check failed: " . $response->body());
         }
 
-        return $response->json();
+        $data = $response->json();
+
+        // Auto-update database with status from Midtrans
+        try {
+            $this->processWebhookNotification($data);
+        } catch (\Throwable $e) {
+            Log::error('Failed to auto-update booking during status verification', ['error' => $e->getMessage()]);
+        }
+
+        return $data;
     }
 }
