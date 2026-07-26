@@ -22,7 +22,7 @@ class StoreBookingRequest extends FormRequest
         \Illuminate\Support\Facades\Log::info('StoreBookingRequest inputs:', $this->except(['ktp_passport_file', 'sim_idp_file']));
         return [
             'name'         => ['required', 'string', 'min:3', 'max:255'],
-            'email'        => ['required', 'email:rfc,dns'],
+            'email'        => ['required', 'email'],
             'phone'        => ['required', 'string', 'regex:/^(\+62|62|0)[0-9]{8,14}$/'],
             'booking_type' => ['required', 'in:package,car_rental'],
             'item_id'      => ['required', 'integer', 'min:1'],
