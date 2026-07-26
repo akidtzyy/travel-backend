@@ -67,12 +67,20 @@ class Booking extends Model
     public static function generateBookingCode(): string
     {
         $date = now()->format('Ymd');
-        $sequence = str_pad(
-            (static::whereDate('created_at', now()->toDateString())->count() + 1),
-            4,
-            '0',
-            STR_PAD_LEFT
-        );
-        return "CGJ-{$date}-{$sequence}";
+        
+        // Count including soft-deleted rows to prevent duplicate codes when some are soft-deleted
+        $todayCount = static::withTrashed()
+            ->whereDate('created_at', now()->toDateString())
+            ->count();
+            
+        $sequenceNum = $todayCount + 1;
+        
+        do {
+            $sequence = str_pad($sequenceNum, 4, '0', STR_PAD_LEFT);
+            $code = "CGJ-{$date}-{$sequence}";
+            $sequenceNum++;
+        } while (static::withTrashed()->where('booking_code', $code)->exists());
+
+        return $code;
     }
 }
