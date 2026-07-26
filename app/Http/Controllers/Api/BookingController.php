@@ -7,6 +7,7 @@ use App\Http\Requests\StoreBookingRequest;
 use App\Models\Booking;
 use App\Models\Customer;
 use App\Services\BookingPaymentService;
+use App\Services\CloudinaryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,9 +15,10 @@ use Illuminate\Support\Facades\Log;
 
 class BookingController extends Controller
 {
-    public function __construct(private BookingPaymentService $paymentService)
-    {
-    }
+    public function __construct(
+        private BookingPaymentService $paymentService,
+        private CloudinaryService $cloudinary,
+    ) {}
 
     /**
      * POST /api/v1/bookings
@@ -37,25 +39,46 @@ class BookingController extends Controller
                 );
 
                 // 2. Find or create customer record
+                $customerData = [
+                    'name'                        => $data['name'],
+                    'phone'                       => preg_replace('/\D/', '', $data['phone']),
+                    'nationality_type'            => $data['nationality_type'],
+                    'identity_type'               => $data['identity_type'],
+                    'identity_number'             => $data['identity_number'] ?? null,
+                    'identity_verification_status'=> 'UNVERIFIED',
+                    'user_id'                     => $request->user()?->id,
+                ];
+
+                // Upload KTP / Passport ke Cloudinary
+                if ($request->hasFile('ktp_passport_file')) {
+                    $url = $this->cloudinary->upload($request->file('ktp_passport_file'), 'identities/ktp');
+                    if ($url) $customerData['identity_photo_path'] = $url;
+                }
+
+                // Upload SIM / IDP ke Cloudinary
+                if ($request->hasFile('sim_idp_file')) {
+                    $url = $this->cloudinary->upload($request->file('sim_idp_file'), 'identities/sim');
+                    if ($url) $customerData['sim_idp_photo_path'] = $url;
+                }
+
                 $customer = Customer::firstOrCreate(
                     ['email' => $data['email']],
-                    [
-                        'name'                        => $data['name'],
-                        'phone'                       => preg_replace('/\D/', '', $data['phone']),
-                        'nationality_type'            => $data['nationality_type'],
-                        'identity_type'               => $data['identity_type'],
-                        'identity_number'             => $data['identity_number'] ?? null,
-                        'identity_verification_status'=> 'UNVERIFIED',
-                        'user_id'                     => $request->user()?->id,
-                    ]
+                    $customerData
                 );
 
-                // If customer already exists, keep their data fresh
+                // Jika customer sudah ada, perbarui nama, telepon & file dokumen jika di-upload ulang
                 if (! $customer->wasRecentlyCreated) {
-                    $customer->update([
+                    $updateData = [
                         'name'  => $data['name'],
                         'phone' => preg_replace('/\D/', '', $data['phone']),
-                    ]);
+                    ];
+                    if (isset($customerData['identity_photo_path'])) {
+                        $updateData['identity_photo_path'] = $customerData['identity_photo_path'];
+                    }
+                    if (isset($customerData['sim_idp_photo_path'])) {
+                        $updateData['sim_idp_photo_path'] = $customerData['sim_idp_photo_path'];
+                    }
+                    $customer->update($updateData);
                 }
 
                 // 3. Build booking record
@@ -113,7 +136,7 @@ class BookingController extends Controller
 
         $data = $request->validate([
             'status'                => ['sometimes', 'string', 'in:pending,confirmed,paid,completed,cancelled,rescheduled,expired'],
-            'payment_status'        => ['sometimes', 'string'],
+            'payment_status'        => ['sometimes', 'string', 'in:unpaid,pending,partially_paid,paid,failed,expired,challenge'],
             'date'                  => ['sometimes', 'date'],
             'end_date'              => ['sometimes', 'date', 'nullable'],
             'duration'              => ['sometimes', 'string'],

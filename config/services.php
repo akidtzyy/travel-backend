@@ -36,4 +36,15 @@ return [
         'is_production' => env('MIDTRANS_IS_PRODUCTION', false),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Cloudinary — Document Storage (KTP / Passport / SIM / IDP)
+    |--------------------------------------------------------------------------
+    */
+    'cloudinary' => [
+        'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+        'api_key'    => env('CLOUDINARY_API_KEY'),
+        'api_secret' => env('CLOUDINARY_API_SECRET'),
+    ],
+
 ];
