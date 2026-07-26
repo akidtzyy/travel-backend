@@ -3,14 +3,14 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use App\Models\CarRental;
 
 class CarRentalSeeder extends Seeder
 {
     public function run(): void
     {
-        // Kosongkan tabel dulu agar tidak terjadi duplikasi ID saat seeding ulang
-        DB::table('car_rentals')->truncate();
+        // Kosongkan tabel dulu agar tidak duplikat ID
+        CarRental::truncate();
 
         $cars = [
             [
@@ -22,10 +22,8 @@ class CarRentalSeeder extends Seeder
                 'capacity' => 5,
                 'image_url' => '/images/cars/brio.jpg',
                 'category' => 'City Car',
-                'features' => json_encode(["Manual/AT", "AC Dingin", "Audio"]),
+                'features' => ["Manual/AT", "AC Dingin", "Audio"],
                 'is_available' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'id' => 2,
@@ -36,10 +34,8 @@ class CarRentalSeeder extends Seeder
                 'capacity' => 7,
                 'image_url' => '/images/cars/xenia.jpg',
                 'category' => 'MPV',
-                'features' => json_encode(["Manual/AT", "AC Double", "7 Seater"]),
+                'features' => ["Manual/AT", "AC Double", "7 Seater"],
                 'is_available' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'id' => 3,
@@ -50,10 +46,8 @@ class CarRentalSeeder extends Seeder
                 'capacity' => 7,
                 'image_url' => '/images/cars/xpander.jpg',
                 'category' => 'MPV',
-                'features' => json_encode(["AT", "AC Double", "Luas"]),
+                'features' => ["AT", "AC Double", "Luas"],
                 'is_available' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'id' => 4,
@@ -64,10 +58,8 @@ class CarRentalSeeder extends Seeder
                 'capacity' => 7,
                 'image_url' => '/images/cars/stargazer.jpg',
                 'category' => 'MPV',
-                'features' => json_encode(["AT", "AC Double", "Modern"]),
+                'features' => ["AT", "AC Double", "Modern"],
                 'is_available' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'id' => 5,
@@ -78,10 +70,8 @@ class CarRentalSeeder extends Seeder
                 'capacity' => 7,
                 'image_url' => '/images/cars/reborn.jpg',
                 'category' => 'Premium MPV',
-                'features' => json_encode(["AT", "Captain Seat", "AC Double"]),
+                'features' => ["AT", "Captain Seat", "AC Double"],
                 'is_available' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'id' => 6,
@@ -92,10 +82,8 @@ class CarRentalSeeder extends Seeder
                 'capacity' => 7,
                 'image_url' => '/images/cars/zenix.jpg',
                 'category' => 'Premium MPV',
-                'features' => json_encode(["Hybrid AT", "Captain Seat", "Sunroof"]),
+                'features' => ["Hybrid AT", "Captain Seat", "Sunroof"],
                 'is_available' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'id' => 7,
@@ -106,10 +94,8 @@ class CarRentalSeeder extends Seeder
                 'capacity' => 7,
                 'image_url' => '/images/cars/xpander-driver.jpg',
                 'category' => 'MPV + Driver',
-                'features' => json_encode(["Driver Pro", "BBM Termasuk", "AC Dingin"]),
+                'features' => ["Driver Pro", "BBM Termasuk", "AC Dingin"],
                 'is_available' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'id' => 8,
@@ -120,10 +106,8 @@ class CarRentalSeeder extends Seeder
                 'capacity' => 7,
                 'image_url' => '/images/cars/reborn-driver.jpg',
                 'category' => 'Premium MPV + Driver',
-                'features' => json_encode(["Driver Pro", "BBM Termasuk", "Captain Seat"]),
+                'features' => ["Driver Pro", "BBM Termasuk", "Captain Seat"],
                 'is_available' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'id' => 9,
@@ -134,10 +118,8 @@ class CarRentalSeeder extends Seeder
                 'capacity' => 12,
                 'image_url' => '/images/cars/elf-short.jpg',
                 'category' => 'Mini Bus + Driver',
-                'features' => json_encode(["Driver Pro", "BBM Termasuk", "12 Seat"]),
+                'features' => ["Driver Pro", "BBM Termasuk", "12 Seat"],
                 'is_available' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'id' => 10,
@@ -148,10 +130,8 @@ class CarRentalSeeder extends Seeder
                 'capacity' => 18,
                 'image_url' => '/images/cars/elf-long.jpg',
                 'category' => 'Mini Bus + Driver',
-                'features' => json_encode(["Driver Pro", "BBM Termasuk", "18 Seat"]),
+                'features' => ["Driver Pro", "BBM Termasuk", "18 Seat"],
                 'is_available' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'id' => 11,
@@ -162,10 +142,8 @@ class CarRentalSeeder extends Seeder
                 'capacity' => 35,
                 'image_url' => '/images/cars/bus-35.jpg',
                 'category' => 'Bus + Driver',
-                'features' => json_encode(["Driver Pro", "BBM Termasuk", "35 Seat"]),
+                'features' => ["Driver Pro", "BBM Termasuk", "35 Seat"],
                 'is_available' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'id' => 12,
@@ -176,10 +154,8 @@ class CarRentalSeeder extends Seeder
                 'capacity' => 45,
                 'image_url' => '/images/cars/bus-45.jpg',
                 'category' => 'Bus + Driver',
-                'features' => json_encode(["Driver Pro", "BBM Termasuk", "45 Seat"]),
+                'features' => ["Driver Pro", "BBM Termasuk", "45 Seat"],
                 'is_available' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'id' => 13,
@@ -190,13 +166,13 @@ class CarRentalSeeder extends Seeder
                 'capacity' => 15,
                 'image_url' => '/images/cars/hiace.jpg',
                 'category' => 'Van + Driver',
-                'features' => json_encode(["Driver Pro", "BBM Termasuk", "15 Seat"]),
+                'features' => ["Driver Pro", "BBM Termasuk", "15 Seat"],
                 'is_available' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
         ];
 
-        DB::table('car_rentals')->insert($cars);
+        foreach ($cars as $car) {
+            CarRental::create($car);
+        }
     }
 }

@@ -13,16 +13,20 @@ class CarRental extends Model
     protected $fillable = [
         'name',
         'type',
-        'capacity',
         'price',
-        'is_available',
+        'duration_desc',
+        'capacity',
         'image_url',
+        'category',
+        'features',
+        'is_available',
     ];
 
     protected function casts(): array
     {
         return [
             'price' => 'decimal:2',
+            'features' => 'array',
             'is_available' => 'boolean',
         ];
     }
