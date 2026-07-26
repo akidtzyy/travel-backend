@@ -63,11 +63,18 @@ class BookingController extends Controller
                     if ($url) $customerData['sim_idp_photo_path'] = $url;
                 }
 
-                // updateOrCreate: jika email sudah ada → update datanya, jika belum → buat baru
-                $customer = Customer::updateOrCreate(
-                    ['email' => $data['email']],
-                    $customerData
-                );
+                // Mencari customer termasuk yang sudah di-soft delete
+                $customer = Customer::withTrashed()->where('email', $data['email'])->first();
+
+                if ($customer) {
+                    // Jika ada dan soft-deleted, restore terlebih dahulu
+                    if ($customer->trashed()) {
+                        $customer->restore();
+                    }
+                    $customer->update($customerData);
+                } else {
+                    $customer = Customer::create(array_merge(['email' => $data['email']], $customerData));
+                }
 
                 // 3. Build booking record
                 return Booking::create([
