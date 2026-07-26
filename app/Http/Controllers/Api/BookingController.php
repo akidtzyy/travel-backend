@@ -38,7 +38,9 @@ class BookingController extends Controller
                     $quantity
                 );
 
-                // 2. Find or create customer record
+                // 2. Find or create / update customer record
+                //    Menggunakan updateOrCreate agar tidak error duplicate key jika
+                //    customer sudah ada di DB (misalnya booking sebelumnya dihapus admin)
                 $customerData = [
                     'name'                        => $data['name'],
                     'phone'                       => preg_replace('/\D/', '', $data['phone']),
@@ -61,25 +63,11 @@ class BookingController extends Controller
                     if ($url) $customerData['sim_idp_photo_path'] = $url;
                 }
 
-                $customer = Customer::firstOrCreate(
+                // updateOrCreate: jika email sudah ada → update datanya, jika belum → buat baru
+                $customer = Customer::updateOrCreate(
                     ['email' => $data['email']],
                     $customerData
                 );
-
-                // Jika customer sudah ada, perbarui nama, telepon & file dokumen jika di-upload ulang
-                if (! $customer->wasRecentlyCreated) {
-                    $updateData = [
-                        'name'  => $data['name'],
-                        'phone' => preg_replace('/\D/', '', $data['phone']),
-                    ];
-                    if (isset($customerData['identity_photo_path'])) {
-                        $updateData['identity_photo_path'] = $customerData['identity_photo_path'];
-                    }
-                    if (isset($customerData['sim_idp_photo_path'])) {
-                        $updateData['sim_idp_photo_path'] = $customerData['sim_idp_photo_path'];
-                    }
-                    $customer->update($updateData);
-                }
 
                 // 3. Build booking record
                 return Booking::create([
