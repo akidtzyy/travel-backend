@@ -29,6 +29,17 @@ class CarRentalController extends Controller
         $cars = $query->orderBy('price', 'asc')->get();
 
         $mapped = $cars->map(function ($car) {
+            $features = $car->features;
+            if (is_string($features)) {
+                $decoded = json_decode($features, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $features = $decoded;
+                }
+            }
+            if (empty($features)) {
+                $features = ['AC', 'Audio System', 'Asuransi', 'Bersih & Nyaman'];
+            }
+
             return [
                 'id'            => $car->id,
                 'name'          => $car->name,
@@ -37,9 +48,9 @@ class CarRentalController extends Controller
                 'price'         => (float) $car->price,
                 'is_available'  => (bool) $car->is_available,
                 'image_url'     => $car->image_url,
-                'duration_desc' => 'Per 24 Jam', // default fallback for frontend compat
-                'category'      => $car->type === 'self_drive' ? 'Lepas Kunci' : 'Dengan Sopir',
-                'features'      => ['AC', 'Audio System', 'Asuransi', 'Bersih & Nyaman'], // default fallback
+                'duration_desc' => $car->duration_capacity ?? 'Per 24 Jam', // default fallback for frontend compat
+                'category'      => $car->category ?? ($car->type === 'self_drive' ? 'Lepas Kunci' : 'Dengan Sopir'),
+                'features'      => $features, // default fallback
             ];
         });
 
@@ -57,14 +68,32 @@ class CarRentalController extends Controller
         // Map seats/features if passed from frontend
         $capacity = $request->input('seats') ?? $validated['capacity'] ?? 4;
 
-        $car = CarRental::create([
-            'name'         => $validated['name'],
-            'type'         => $validated['type'],
-            'capacity'     => $capacity,
-            'price'        => $validated['price'],
-            'is_available' => $validated['is_available'] ?? true,
-            'image_url'    => $validated['image_url'] ?? null,
-        ]);
+        $car = new CarRental();
+        $car->name = $validated['name'];
+        $car->type = $validated['type'];
+        $car->capacity = $capacity;
+        $car->price = $validated['price'];
+        $car->is_available = $validated['is_available'] ?? true;
+        $car->image_url = $validated['image_url'] ?? null;
+
+        // Save new columns directly (bypassing fillable model restriction)
+        $car->duration_capacity = $request->input('duration_capacity') ?? $request->input('duration_desc');
+        $car->category = $request->input('category');
+
+        $features = $request->input('features');
+        if (is_array($features)) {
+            $casts = $car->getCasts();
+            $castType = $casts['features'] ?? null;
+            if ($castType && in_array($castType, ['array', 'json', 'object', 'collection', 'encrypted:array', 'encrypted:json', 'encrypted:object', 'as_array', 'as_json', 'as_object', 'as_collection'])) {
+                $car->features = $features;
+            } else {
+                $car->features = json_encode($features);
+            }
+        } else {
+            $car->features = $features;
+        }
+
+        $car->save();
 
         return response()->json([
             'message' => 'Car rental added successfully.',
@@ -81,13 +110,17 @@ class CarRentalController extends Controller
         $car = CarRental::findOrFail($id);
 
         $validated = $request->validate([
-            'name'         => ['sometimes', 'string', 'max:255'],
-            'type'         => ['sometimes', 'string', 'max:100'],
-            'seats'        => ['sometimes', 'integer', 'min:1'],
-            'capacity'     => ['sometimes', 'integer', 'min:1'],
-            'price'        => ['sometimes', 'numeric', 'min:0'],
-            'is_available' => ['sometimes', 'boolean'],
-            'image_url'    => ['nullable', 'string'],
+            'name'              => ['sometimes', 'string', 'max:255'],
+            'type'              => ['sometimes', 'string', 'max:100'],
+            'seats'             => ['sometimes', 'integer', 'min:1'],
+            'capacity'          => ['sometimes', 'integer', 'min:1'],
+            'price'             => ['sometimes', 'numeric', 'min:0'],
+            'is_available'      => ['sometimes', 'boolean'],
+            'image_url'         => ['nullable', 'string'],
+            'duration_capacity' => ['nullable', 'string', 'max:255'],
+            'duration_desc'     => ['nullable', 'string', 'max:255'],
+            'category'          => ['nullable', 'string', 'max:255'],
+            'features'          => ['nullable'],
         ]);
 
         $updateData = [];
@@ -99,7 +132,35 @@ class CarRentalController extends Controller
         if (isset($validated['is_available'])) $updateData['is_available'] = $validated['is_available'];
         if (array_key_exists('image_url', $validated)) $updateData['image_url'] = $validated['image_url'];
 
-        $car->update($updateData);
+        $car->fill($updateData);
+
+        // Update new columns directly (bypassing fillable model restriction)
+        if ($request->has('duration_capacity')) {
+            $car->duration_capacity = $validated['duration_capacity'];
+        } elseif ($request->has('duration_desc')) {
+            $car->duration_capacity = $validated['duration_desc'];
+        }
+
+        if ($request->has('category')) {
+            $car->category = $validated['category'];
+        }
+
+        if ($request->has('features')) {
+            $features = $validated['features'];
+            if (is_array($features)) {
+                $casts = $car->getCasts();
+                $castType = $casts['features'] ?? null;
+                if ($castType && in_array($castType, ['array', 'json', 'object', 'collection', 'encrypted:array', 'encrypted:json', 'encrypted:object', 'as_array', 'as_json', 'as_object', 'as_collection'])) {
+                    $car->features = $features;
+                } else {
+                    $car->features = json_encode($features);
+                }
+            } else {
+                $car->features = $features;
+            }
+        }
+
+        $car->save();
 
         return response()->json([
             'message' => 'Car rental updated successfully.',
