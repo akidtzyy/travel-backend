@@ -25,7 +25,7 @@ class StoreBookingRequest extends FormRequest
             'phone'        => ['required', 'string', 'regex:/^(\+62|62|0)[0-9]{8,14}$/'],
             'booking_type' => ['required', 'in:package,car_rental'],
             'item_id'      => ['required', 'integer', 'min:1'],
-            'date'         => ['required', 'date', 'after:today'],
+            'date'         => ['required', 'date', 'after_or_equal:today'],
             'duration'     => ['required', 'string', 'max:100'],
             'quantity'     => ['sometimes', 'integer', 'min:1', 'max:99'],
             'notes'        => ['nullable', 'string', 'max:2000'],
@@ -43,7 +43,7 @@ class StoreBookingRequest extends FormRequest
     {
         return [
             'phone.regex'         => 'Nomor telepon harus dalam format Indonesia (misal: 08xxxxxxxx atau +628xxxxxxxx).',
-            'date.after'          => 'Tanggal booking harus setelah hari ini.',
+            'date.after_or_equal' => 'Tanggal booking tidak boleh sebelum hari ini.',
             'booking_type.in'     => 'Tipe booking hanya boleh "package" atau "car_rental".',
             'payment_type.in'     => 'Tipe pembayaran hanya boleh "FULL" atau "DP".',
             'nationality_type.in' => 'Kewarganegaraan hanya boleh "WNI" atau "WNA".',

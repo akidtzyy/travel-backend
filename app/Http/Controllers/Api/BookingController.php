@@ -27,7 +27,7 @@ class BookingController extends Controller
         $data = $request->validated();
 
         try {
-            $booking = DB::transaction(function () use ($data) {
+            $booking = DB::transaction(function () use ($data, $request) {
                 // 1. Server-side price calculation — do NOT trust client input
                 $quantity  = $data['quantity'] ?? 1;
                 $totalPrice = $this->paymentService->calculatePrice(
