@@ -19,6 +19,7 @@ class StoreBookingRequest extends FormRequest
      */
     public function rules(): array
     {
+        \Illuminate\Support\Facades\Log::info('StoreBookingRequest inputs:', $this->except(['ktp_passport_file', 'sim_idp_file']));
         return [
             'name'         => ['required', 'string', 'min:3', 'max:255'],
             'email'        => ['required', 'email:rfc,dns'],
