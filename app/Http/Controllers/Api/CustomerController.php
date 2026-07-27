@@ -56,6 +56,9 @@ class CustomerController extends Controller
                 'identity_number'              => $c->identity_number,
                 'country_origin'               => $c->country_origin,
                 'identity_verification_status' => $c->identity_verification_status,
+                // Accessor-resolved Cloudinary URLs (full https:// URLs)
+                'ktp_passport_url'             => $c->ktp_passport_url,
+                'sim_idp_url'                  => $c->sim_idp_url,
                 'total_bookings'               => $c->total_bookings,
                 'total_spent'                  => $c->total_spent,
                 'last_booking_date'            => $c->last_booking_date,
