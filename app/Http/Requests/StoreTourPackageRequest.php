@@ -24,7 +24,7 @@ class StoreTourPackageRequest extends FormRequest
             'included.*'  => ['required', 'string'],
             'category'    => ['required', 'string', 'max:100'],
             'image_url'   => ['nullable', 'url'],
-            'is_active'   => ['boolean'],
+            'is_available'=> ['boolean'],
         ];
     }
 }

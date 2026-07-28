@@ -19,7 +19,7 @@ class TourPackage extends Model
         'included',
         'category',
         'image_url',
-        'is_active',
+        'is_available',
     ];
 
     protected function casts(): array
@@ -28,13 +28,13 @@ class TourPackage extends Model
             'highlights' => 'array',
             'included' => 'array',
             'price' => 'decimal:2',
-            'is_active' => 'boolean',
+            'is_available' => 'boolean',
         ];
     }
 
     // Scope to only retrieve active packages
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where('is_available', true);
     }
 }

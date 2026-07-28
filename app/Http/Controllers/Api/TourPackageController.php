@@ -28,7 +28,7 @@ class TourPackageController extends Controller
                 'included'     => $p->included,
                 'category'     => $p->category,
                 'image_url'    => $p->image_url,
-                'is_available' => (bool) $p->is_active, // Map is_active to is_available
+                'is_available' => (bool) $p->is_available,
             ];
         });
 
@@ -43,12 +43,7 @@ class TourPackageController extends Controller
     {
         $validated = $request->validated();
         
-        // Map is_available from frontend to is_active
-        $isActive = $request->input('is_available') ?? $validated['is_active'] ?? true;
-
-        $package = TourPackage::create(array_merge($validated, [
-            'is_active' => $isActive
-        ]));
+        $package = TourPackage::create($validated);
 
         return response()->json([
             'message' => 'Tour package created successfully.',
@@ -74,16 +69,9 @@ class TourPackageController extends Controller
             'category'     => ['sometimes', 'string', 'max:100'],
             'image_url'    => ['nullable', 'string'],
             'is_available' => ['sometimes', 'boolean'],
-            'is_active'    => ['sometimes', 'boolean'],
         ]);
 
-        $updateData = $validated;
-        if (isset($validated['is_available'])) {
-            $updateData['is_active'] = $validated['is_available'];
-            unset($updateData['is_available']);
-        }
-
-        $package->update($updateData);
+        $package->update($validated);
 
         return response()->json([
             'message' => 'Tour package updated successfully.',
