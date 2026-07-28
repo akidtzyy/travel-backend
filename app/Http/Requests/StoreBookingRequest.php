@@ -34,6 +34,8 @@ class StoreBookingRequest extends FormRequest
             'nationality_type' => ['required', 'in:WNI,WNA'],
             'identity_type'    => ['required', 'in:NIK,PASSPORT'],
             'identity_number'  => ['nullable', 'string', 'max:50'],
+            'ktp_passport_file' => ['nullable', 'file', 'max:10240'],
+            'sim_idp_file'      => ['nullable', 'file', 'max:10240'],
         ];
     }
 
