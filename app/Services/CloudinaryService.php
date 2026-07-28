@@ -29,13 +29,22 @@ class CloudinaryService
     public function upload(UploadedFile $file, string $folder = 'identities'): ?string
     {
         $timestamp = (string) now()->timestamp;
-        $params    = ['folder' => $folder, 'timestamp' => $timestamp];
 
-        // Build the SHA-1 signature
-        $sigString = http_build_query($params, '', '&', PHP_QUERY_RFC3986);
-        $signature = sha1($sigString . $this->apiSecret);
+        // Cloudinary signature: params sorted alphabetically, NOT URL-encoded
+        $params = ['folder' => $folder, 'timestamp' => $timestamp];
+        ksort($params);
+        $sigString = urldecode(http_build_query($params, '', '&'));
+        $signature  = sha1($sigString . $this->apiSecret);
 
         $endpoint = "https://api.cloudinary.com/v1_1/{$this->cloudName}/auto/upload";
+
+        Log::info('Cloudinary upload attempt', [
+            'folder'    => $folder,
+            'endpoint'  => $endpoint,
+            'sig_input' => $sigString,
+            'filename'  => $file->getClientOriginalName(),
+            'filesize'  => $file->getSize(),
+        ]);
 
         $response = Http::attach(
             'file',
@@ -49,7 +58,9 @@ class CloudinaryService
         ]);
 
         if ($response->successful()) {
-            return $response->json('secure_url');
+            $url = $response->json('secure_url');
+            Log::info('Cloudinary upload success', ['url' => $url]);
+            return $url;
         }
 
         Log::error('Cloudinary upload failed', [

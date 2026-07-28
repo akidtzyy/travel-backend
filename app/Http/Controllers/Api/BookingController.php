@@ -39,35 +39,42 @@ class BookingController extends Controller
                 );
 
                 // 2. Find or create / update customer record
-                //    Menggunakan updateOrCreate agar tidak error duplicate key jika
-                //    customer sudah ada di DB (misalnya booking sebelumnya dihapus admin)
-                $customerData = [
-                    'name'                        => $data['name'],
-                    'phone'                       => preg_replace('/\D/', '', $data['phone']),
-                    'nationality_type'            => $data['nationality_type'],
-                    'identity_type'               => $data['identity_type'],
-                    'identity_number'             => $data['identity_number'] ?? null,
-                    'identity_verification_status'=> 'UNVERIFIED',
-                    'user_id'                     => $request->user()?->id,
-                ];
-
-                // Upload KTP / Passport ke Cloudinary
-                if ($request->hasFile('ktp_passport_file')) {
-                    $url = $this->cloudinary->upload($request->file('ktp_passport_file'), 'identities/ktp');
-                    if ($url) $customerData['identity_photo_path'] = $url;
-                }
-
-                // Upload SIM / IDP ke Cloudinary
-                if ($request->hasFile('sim_idp_file')) {
-                    $url = $this->cloudinary->upload($request->file('sim_idp_file'), 'identities/sim');
-                    if ($url) $customerData['sim_idp_photo_path'] = $url;
-                }
-
-                // Mencari customer termasuk yang sudah di-soft delete
+                // Search including soft-deleted records
                 $customer = Customer::withTrashed()->where('email', $data['email'])->first();
 
+                // Base customer data (no document paths yet)
+                $customerData = [
+                    'name'             => $data['name'],
+                    'phone'            => preg_replace('/\D/', '', $data['phone']),
+                    'nationality_type' => $data['nationality_type'],
+                    'identity_type'    => $data['identity_type'],
+                    'identity_number'  => $data['identity_number'] ?? null,
+                    'user_id'          => $request->user()?->id,
+                ];
+
+                // Upload KTP / Passport ke Cloudinary (only if a new file was provided)
+                if ($request->hasFile('ktp_passport_file')) {
+                    $url = $this->cloudinary->upload($request->file('ktp_passport_file'), 'identities/ktp');
+                    if ($url) {
+                        $customerData['identity_photo_path']         = $url;
+                        $customerData['identity_verification_status'] = 'UNVERIFIED';
+                    }
+                } elseif (!$customer || !$customer->identity_photo_path) {
+                    // No existing doc — mark as unverified
+                    $customerData['identity_verification_status'] = 'UNVERIFIED';
+                }
+                // If customer already has a doc and no new upload → leave both path + status untouched
+
+                // Upload SIM / IDP ke Cloudinary (only if a new file was provided)
+                if ($request->hasFile('sim_idp_file')) {
+                    $url = $this->cloudinary->upload($request->file('sim_idp_file'), 'identities/sim');
+                    if ($url) {
+                        $customerData['sim_idp_photo_path'] = $url;
+                    }
+                }
+
                 if ($customer) {
-                    // Jika ada dan soft-deleted, restore terlebih dahulu
+                    // Restore if soft-deleted, then update
                     if ($customer->trashed()) {
                         $customer->restore();
                     }
