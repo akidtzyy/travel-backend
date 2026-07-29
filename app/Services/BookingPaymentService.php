@@ -77,6 +77,7 @@ class BookingPaymentService
             $itemDescription = $booking->item_name;
         }
 
+        $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
         $customer = $booking->customer;
         $payload = [
             'transaction_details' => [
@@ -98,6 +99,11 @@ class BookingPaymentService
                 'start_time' => now()->format('Y-m-d H:i:s O'),
                 'unit'       => 'minutes',
                 'duration'   => 30,
+            ],
+            'callbacks' => [
+                'finish'   => "{$frontendUrl}/?show_bookings=true",
+                'unfinish' => "{$frontendUrl}/?show_bookings=true",
+                'error'    => "{$frontendUrl}/?show_bookings=true",
             ],
         ];
 
@@ -217,13 +223,19 @@ class BookingPaymentService
             $booking->customer->recordPayment($grossAmount);
 
         } elseif (in_array($transactionStatus, ['cancel', 'deny', 'expire'])) {
-            $booking->update([
-                'payment_status' => 'failed',
-            ]);
+            // Only update to failed if this is NOT a final payment attempt of a partially paid booking
+            if (!$isFinalPayment && $booking->payment_status !== 'partially_paid' && $booking->payment_status !== 'paid') {
+                $booking->update([
+                    'payment_status' => 'failed',
+                ]);
+            }
         } elseif ($transactionStatus === 'pending') {
-            $booking->update([
-                'payment_status' => 'pending',
-            ]);
+            // Only update to pending if this is NOT a final payment attempt of a partially paid booking
+            if (!$isFinalPayment && $booking->payment_status !== 'partially_paid' && $booking->payment_status !== 'paid') {
+                $booking->update([
+                    'payment_status' => 'pending',
+                ]);
+            }
         }
 
         return $booking->fresh();
