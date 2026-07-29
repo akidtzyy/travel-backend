@@ -27,6 +27,9 @@ class Booking extends Model
         'order_id',
         'snap_token',
         'payment_link',
+        'final_order_id',
+        'final_snap_token',
+        'final_payment_link',
         'expiry_time',
         'paid_at',
     ];

@@ -95,8 +95,26 @@ class PaymentController extends Controller
             'order_id' => ['required', 'string'],
         ]);
 
+        $orderId = $request->string('order_id');
+
+        // Auto-promote initial order ID to final order ID if the booking is fully paid via DP
+        preg_match('/^TRAVEL-(\d+)-/', $orderId, $matches);
+        $bookingId = $matches[1] ?? null;
+
+        if ($bookingId) {
+            $booking = Booking::find($bookingId);
+            if ($booking && str_contains($orderId, '-INITIAL-') && $booking->payment_status === 'paid' && $booking->final_order_id) {
+                Log::info('PaymentController: Promoting status verification to final payment order ID', [
+                    'booking_id' => $booking->id,
+                    'original_order_id' => $orderId,
+                    'promoted_order_id' => $booking->final_order_id,
+                ]);
+                $orderId = $booking->final_order_id;
+            }
+        }
+
         try {
-            $status = $this->paymentService->verifyTransactionStatus($request->string('order_id'));
+            $status = $this->paymentService->verifyTransactionStatus($orderId);
 
             return response()->json([
                 'message' => 'Status pembayaran berhasil diverifikasi.',

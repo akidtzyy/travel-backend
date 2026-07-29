@@ -122,11 +122,19 @@ class BookingPaymentService
         }
 
         // Persist token and order_id into the booking record
-        $booking->update([
-            'snap_token'   => $snapToken,
-            'order_id'     => $orderId,
-            'payment_link' => $paymentUrl,
-        ]);
+        if ($isFinalPayment) {
+            $booking->update([
+                'final_snap_token'   => $snapToken,
+                'final_order_id'     => $orderId,
+                'final_payment_link' => $paymentUrl,
+            ]);
+        } else {
+            $booking->update([
+                'snap_token'   => $snapToken,
+                'order_id'     => $orderId,
+                'payment_link' => $paymentUrl,
+            ]);
+        }
 
         return [
             'snap_token'  => $snapToken,
