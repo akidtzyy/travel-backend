@@ -36,7 +36,7 @@ Route::get('/export-sql', function () {
         $sql .= "\n\n";
     }
     
-    // 2. Hidupkan kembali pemeriksaan Foreign Key di akhir
+    // 2. Hidupkan kembali pemeriksaan Foreign Key di akhir.
     $sql .= "SET FOREIGN_KEY_CHECKS = 1;\n";
     
     return response($sql, 200)
