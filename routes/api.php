@@ -52,6 +52,7 @@ Route::prefix('v1')->group(function () {
     // -----------------------------------------------------------------------
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('bookings',              [BookingController::class, 'store']);
+        Route::get('my-bookings',            [BookingController::class, 'myBookings']);
         Route::post('payments/snap-token',   [PaymentController::class, 'snapToken']);
         Route::post('payments/verify-status',[PaymentController::class, 'verifyStatus']);
     });

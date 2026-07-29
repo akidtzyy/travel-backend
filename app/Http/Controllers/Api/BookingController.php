@@ -196,5 +196,34 @@ class BookingController extends Controller
             'message' => 'Booking berhasil dihapus.'
         ]);
     }
+
+    /**
+     * GET /api/v1/my-bookings
+     * Protected: list all bookings belonging to the logged in user.
+     */
+    public function myBookings(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized.'], 401);
+        }
+
+        // Find customer associated with user
+        $customer = Customer::withTrashed()
+            ->where('user_id', $user->id)
+            ->orWhere('email', $user->email)
+            ->first();
+
+        if (!$customer) {
+            return response()->json(['data' => []]);
+        }
+
+        $bookings = Booking::where('customer_id', $customer->id)
+            ->with('customer')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json(['data' => $bookings]);
+    }
 }
 
