@@ -42,6 +42,15 @@ class BookingController extends Controller
                 // Search including soft-deleted records
                 $customer = Customer::withTrashed()->where('email', $data['email'])->first();
 
+                Log::info('BookingController: Processing customer documents', [
+                    'email' => $data['email'],
+                    'customer_exists' => !is_null($customer),
+                    'existing_identity_photo' => $customer?->identity_photo_path,
+                    'existing_sim_photo' => $customer?->sim_idp_photo_path,
+                    'has_ktp_file' => $request->hasFile('ktp_passport_file'),
+                    'has_sim_file' => $request->hasFile('sim_idp_file'),
+                ]);
+
                 // Base customer data (no document paths yet)
                 $customerData = [
                     'name'             => $data['name'],
@@ -54,7 +63,14 @@ class BookingController extends Controller
 
                 // Upload KTP / Passport ke Cloudinary (only if a new file was provided)
                 if ($request->hasFile('ktp_passport_file')) {
-                    $url = $this->cloudinary->upload($request->file('ktp_passport_file'), 'identities/ktp');
+                    $file = $request->file('ktp_passport_file');
+                    Log::info('BookingController: Uploading KTP file to Cloudinary', [
+                        'original_name' => $file->getClientOriginalName(),
+                        'mime_type' => $file->getClientMimeType(),
+                        'size' => $file->getSize(),
+                    ]);
+                    $url = $this->cloudinary->upload($file, 'identities/ktp');
+                    Log::info('BookingController: KTP upload result', ['url' => $url]);
                     if ($url) {
                         $customerData['identity_photo_path']         = $url;
                         $customerData['identity_verification_status'] = 'UNVERIFIED';
@@ -67,11 +83,23 @@ class BookingController extends Controller
 
                 // Upload SIM / IDP ke Cloudinary (only if a new file was provided)
                 if ($request->hasFile('sim_idp_file')) {
-                    $url = $this->cloudinary->upload($request->file('sim_idp_file'), 'identities/sim');
+                    $file = $request->file('sim_idp_file');
+                    Log::info('BookingController: Uploading SIM file to Cloudinary', [
+                        'original_name' => $file->getClientOriginalName(),
+                        'mime_type' => $file->getClientMimeType(),
+                        'size' => $file->getSize(),
+                    ]);
+                    $url = $this->cloudinary->upload($file, 'identities/sim');
+                    Log::info('BookingController: SIM upload result', ['url' => $url]);
                     if ($url) {
                         $customerData['sim_idp_photo_path'] = $url;
                     }
                 }
+
+                Log::info('BookingController: Upserting customer database record', [
+                    'customer_id' => $customer?->id,
+                    'customer_data' => $customerData
+                ]);
 
                 if ($customer) {
                     // Restore if soft-deleted, then update
